@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      - XTREAM_URL=${XTREAM_URL}
+      - XTREAM_USERNAME=${XTREAM_USERNAME}
+      - XTREAM_PASSWORD=${XTREAM_PASSWORD}
+      - MOVIES_PATH=/downloads/movies
+      - SHOWS_PATH=/downloads/shows
+      - DB_PATH=/data
+    volumes:
+      - ./data:/data
+      - ${MOVIES_HOST_PATH:-./downloads/movies}:/downloads/movies
+      - ${SHOWS_HOST_PATH:-./downloads/shows}:/downloads/shows
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:80"
+    depends_on:
+      - backend

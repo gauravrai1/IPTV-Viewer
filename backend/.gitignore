@@ -1,0 +1,8 @@
+# Environment — never commit real credentials
+.env
+
+# Node dependencies
+node_modules/
+
+# macOS
+.DS_Store

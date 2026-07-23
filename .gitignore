@@ -1,0 +1,29 @@
+# Environment — never commit real credentials
+.env
+backend/.env
+
+# SQLite database files
+data/
+
+# Downloaded media (bind-mounted volumes)
+downloads/
+
+# Node dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Vite build output
+frontend/dist/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# AI
+.claude
