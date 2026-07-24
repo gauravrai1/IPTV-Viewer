@@ -1,0 +1,18 @@
+services:
+  iptv-viewer:
+    image: ghcr.io/gauravrai1/iptv-viewer-aio:latest
+    # To build locally instead of pulling, comment out `image:` above and use:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.aio
+    restart: unless-stopped
+    environment:
+      - XTREAM_URL=${XTREAM_URL}
+      - XTREAM_USERNAME=${XTREAM_USERNAME}
+      - XTREAM_PASSWORD=${XTREAM_PASSWORD}
+    ports:
+      - "${PORT:-8080}:80"
+    volumes:
+      - ./data:/data
+      - ${MOVIES_HOST_PATH:-./downloads/movies}:/downloads/movies
+      - ${SHOWS_HOST_PATH:-./downloads/shows}:/downloads/shows

@@ -61,6 +61,53 @@ No rebuild needed unless you update the code.
 
 ---
 
+## All-in-one (AIO) image
+
+For simpler installs (single container, no `docker compose` build step), a combined image bundles the frontend (nginx) and backend (node) together. It's published by CI to GHCR on every tagged release.
+
+### Run with `docker run`
+
+```bash
+docker run -d \
+  --name iptv-viewer \
+  -p 8080:80 \
+  -e XTREAM_URL=http://your-provider.example.com:8080 \
+  -e XTREAM_USERNAME=your_username \
+  -e XTREAM_PASSWORD=your_password \
+  -v ./data:/data \
+  -v /mnt/media/movies:/downloads/movies \
+  -v /mnt/media/tvshows:/downloads/shows \
+  ghcr.io/gauravrai1/iptv-viewer-aio:latest
+```
+
+Open `http://<homelab-ip>:8080`.
+
+### Run with Docker Compose
+
+```bash
+cp .env.example .env
+nano .env
+docker compose -f docker-compose.aio.yml up -d
+```
+
+### Build it yourself
+
+```bash
+docker build -f Dockerfile.aio -t iptv-viewer:aio .
+```
+
+### Available tags
+
+| Tag | Meaning |
+|-----|---------|
+| `latest` | Most recent tagged release |
+| `vX.Y.Z`, `vX.Y`, `vX` | Specific release / floating minor / floating major |
+| `edge` | Latest manual build from the `Release AIO image` workflow (via `workflow_dispatch`) |
+
+Images are built for `linux/amd64` and `linux/arm64` (Raspberry Pi / ARM NAS friendly).
+
+---
+
 ## Features
 
 ### Initialization screen
@@ -170,8 +217,16 @@ iptv/
 │   │       └── Downloads.jsx  # Download queue with live progress
 │   ├── nginx.conf             # Reverse proxy to backend; proxy_buffering off for SSE
 │   └── Dockerfile             # Multi-stage: Vite build → nginx
+├── aio/
+│   ├── entrypoint.sh           # Starts nginx + node in the combined AIO container
+│   └── nginx.conf              # AIO nginx config (proxies /api to 127.0.0.1:3001)
 ├── data/                      # SQLite DB (auto-created, persisted via Docker volume)
+├── .github/workflows/
+│   ├── release-aio-image.yml   # Builds & publishes the AIO image to GHCR on tag push
+│   └── docker-build-check.yml  # PR/CI build check for Dockerfile.aio
 ├── docker-compose.yml
+├── docker-compose.aio.yml
+├── Dockerfile.aio              # Multi-stage build: frontend + backend → single image
 ├── .env.example
 └── README.md
 ```
