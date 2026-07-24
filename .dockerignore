@@ -1,0 +1,17 @@
+.git
+.github
+data
+downloads
+**/node_modules
+frontend/dist
+backend/.env
+.env
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+**/.DS_Store
+.vscode
+.idea
+.claude
+README.md

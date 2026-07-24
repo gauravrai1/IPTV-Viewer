@@ -1,0 +1,45 @@
+# All-in-one image: frontend (nginx) + backend (node) in a single container.
+# Build from the repository root:  docker build -f Dockerfile.aio -t iptv-viewer:aio .
+
+# ---- Frontend build ----
+FROM node:20-alpine AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# ---- Backend deps ----
+FROM node:20-alpine AS backend-build
+RUN apk add --no-cache python3 make g++
+WORKDIR /app/backend
+COPY backend/package.json backend/package-lock.json ./
+RUN npm ci --omit=dev
+COPY backend/src ./src
+
+# ---- Final image ----
+FROM node:20-alpine
+
+RUN apk add --no-cache nginx tini
+
+COPY --from=backend-build /app/backend /app/backend
+COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
+
+COPY aio/nginx.conf /etc/nginx/http.d/default.conf
+COPY aio/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh \
+    && mkdir -p /data /downloads/movies /downloads/shows
+
+ENV MOVIES_PATH=/downloads/movies \
+    SHOWS_PATH=/downloads/shows \
+    DB_PATH=/data \
+    NODE_ENV=production
+
+VOLUME ["/data", "/downloads/movies", "/downloads/shows"]
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD wget -q -O- http://127.0.0.1/api/health || exit 1
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/entrypoint.sh"]
