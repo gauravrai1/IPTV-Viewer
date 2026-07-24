@@ -20,15 +20,28 @@ COPY backend/src ./src
 # ---- Final image ----
 FROM node:20-alpine
 
-RUN apk add --no-cache nginx tini
+# libcap provides setcap, used below to let nginx bind port 80 as non-root.
+RUN apk add --no-cache nginx tini libcap
 
 COPY --from=backend-build /app/backend /app/backend
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
 
 COPY aio/nginx.conf /etc/nginx/http.d/default.conf
 COPY aio/entrypoint.sh /entrypoint.sh
+
+# Run as the `node` user (uid/gid 1000, already present in the base image)
+# instead of root, so downloaded media is owned by the same PUID/PGID other
+# *arr/media-server containers typically use. nginx's "user" directive only
+# applies when the master process is root, so drop it to avoid a startup
+# warning; grant CAP_NET_BIND_SERVICE via setcap so nginx can still bind
+# port 80 without root.
 RUN chmod +x /entrypoint.sh \
-    && mkdir -p /data /downloads/movies /downloads/shows
+    && mkdir -p /data /downloads/movies /downloads/shows \
+    && sed -i '/^user /d' /etc/nginx/nginx.conf \
+    && setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx \
+    && chown -R node:node \
+        /data /downloads/movies /downloads/shows \
+        /var/lib/nginx /var/log/nginx /run/nginx
 
 ENV MOVIES_PATH=/downloads/movies \
     SHOWS_PATH=/downloads/shows \
@@ -37,6 +50,8 @@ ENV MOVIES_PATH=/downloads/movies \
 
 VOLUME ["/data", "/downloads/movies", "/downloads/shows"]
 EXPOSE 80
+
+USER node
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD wget -q -O- http://127.0.0.1/api/health || exit 1

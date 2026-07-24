@@ -6,6 +6,9 @@ services:
     #   context: .
     #   dockerfile: Dockerfile.aio
     restart: unless-stopped
+    user: "${IPTV_PUID:-1000}:${IPTV_PGID:-1000}"
+    cap_add:
+      - NET_BIND_SERVICE
     environment:
       - XTREAM_URL=${XTREAM_URL}
       - XTREAM_USERNAME=${XTREAM_USERNAME}
