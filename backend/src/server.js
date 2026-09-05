@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getDb } from './db.js';
+import { processQueue } from './downloader.js';
 import moviesRouter from './routes/movies.js';
 import seriesRouter from './routes/series.js';
 import downloadsRouter from './routes/downloads.js';
@@ -35,4 +36,5 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
 app.listen(PORT, () => {
   console.log(`Backend listening on port ${PORT}`);
   getDb(); // init DB on startup
+  processQueue(); // resume downloads interrupted by a restart
 });

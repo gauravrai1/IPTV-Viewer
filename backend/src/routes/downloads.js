@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import path from 'path';
+import fs from 'fs';
 import { getDb, getSetting } from '../db.js';
 import { addClient, removeClient, broadcast } from '../events.js';
-import { cancelDownload, processQueue } from '../downloader.js';
+import { cancelDownload, processQueue, partPath } from '../downloader.js';
 import * as xtream from '../xtream.js';
 
 const router = Router();
@@ -103,6 +104,10 @@ router.delete('/:id', (req, res) => {
 
   if (dl.status === 'downloading') {
     cancelDownload(dl.id);
+  } else {
+    // Clean up any leftover partial file (the downloader removes it itself
+    // when an active download is cancelled).
+    try { fs.unlinkSync(partPath(dl)); } catch {}
   }
 
   db.prepare('DELETE FROM downloads WHERE id = ?').run(req.params.id);
@@ -118,12 +123,14 @@ router.post('/:id/retry', (req, res) => {
     return res.status(400).json({ error: 'Can only retry error or cancelled downloads' });
   }
 
+  // Keep progress/downloaded as-is: if a partial (.part) file exists the
+  // downloader resumes from it, so the retry continues where it left off.
   db.prepare(`
-    UPDATE downloads SET status = 'queued', progress = 0, downloaded = 0, speed = 0, error = NULL, updated_at = unixepoch()
+    UPDATE downloads SET status = 'queued', speed = 0, error = NULL, updated_at = unixepoch()
     WHERE id = ?
   `).run(dl.id);
 
-  broadcast('update', { id: dl.id, status: 'queued', progress: 0, downloaded: 0 });
+  broadcast('update', { id: dl.id, status: 'queued', error: null });
   processQueue();
 
   res.json(db.prepare('SELECT * FROM downloads WHERE id = ?').get(dl.id));

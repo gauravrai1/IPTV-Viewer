@@ -99,9 +99,10 @@ function migrate(db) {
   db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES ('shows_path', ?)`).run(showsPath);
   db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES ('max_concurrent', '3')`).run();
 
-  // Mark any interrupted downloads as error on startup
+  // Re-queue any downloads interrupted by a server restart; they resume
+  // from their partial (.part) files when the queue is processed.
   db.prepare(`
-    UPDATE downloads SET status = 'error', error = 'Interrupted by server restart'
+    UPDATE downloads SET status = 'queued', speed = 0, error = NULL
     WHERE status = 'downloading'
   `).run();
 }
