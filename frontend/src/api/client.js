@@ -39,6 +39,12 @@ export const api = {
   status: {
     get: () => req('/status'),
   },
+  storage: {
+    summary: () => req('/storage/summary'),
+    status: () => req('/storage/status'),
+    analyze: (data) => req('/storage/analyze', { method: 'POST', body: JSON.stringify(data || {}) }),
+    cancel: () => req('/storage/cancel', { method: 'POST' }),
+  },
   watchlist: {
     list: () => req('/watchlist'),
     add: (data) => req('/watchlist', { method: 'POST', body: JSON.stringify(data) }),

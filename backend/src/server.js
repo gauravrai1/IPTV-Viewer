@@ -13,6 +13,7 @@ import proxyRouter from './routes/proxy.js';
 import streamRouter from './routes/stream.js';
 import watchlistRouter from './routes/watchlist.js';
 import statusRouter from './routes/status.js';
+import storageRouter from './routes/storage.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3001;
@@ -30,6 +31,7 @@ app.use('/api/proxy', proxyRouter);
 app.use('/api/stream', streamRouter);
 app.use('/api/watchlist', watchlistRouter);
 app.use('/api/status', statusRouter);
+app.use('/api/storage', storageRouter);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
