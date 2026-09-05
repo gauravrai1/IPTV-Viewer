@@ -5,6 +5,7 @@ import Movies from './pages/Movies.jsx';
 import TVShows from './pages/TVShows.jsx';
 import Downloads from './pages/Downloads.jsx';
 import Watchlist from './pages/Watchlist.jsx';
+import Storage from './pages/Storage.jsx';
 import InitLoader from './components/InitLoader.jsx';
 import { api } from './api/client.js';
 
@@ -18,6 +19,7 @@ export default function App() {
   const [initItems, setInitItems] = useState(makeItems);
   const [initialized, setInitialized] = useState(false);
   const [downloads, setDownloads] = useState([]);
+  const [storageJob, setStorageJob] = useState(null);
   const [settings, setSettings] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
 
@@ -172,6 +174,7 @@ export default function App() {
       if (msg.event === 'added') { setDownloads(p => [msg, ...p.filter(d => d.id !== msg.id)]); return; }
       if (msg.event === 'removed') { setDownloads(p => p.filter(d => d.id !== msg.id)); return; }
       if (msg.event === 'cleared') { setDownloads(p => p.filter(d => ['queued','downloading'].includes(d.status))); return; }
+      if (msg.event === 'storage') { setStorageJob(msg.job); return; }
       if (msg.event === 'update' || msg.event === 'progress') {
         setDownloads(p => p.map(d => d.id === msg.id ? { ...d, ...msg } : d));
       }
@@ -233,6 +236,7 @@ export default function App() {
               />
             } />
             <Route path="/downloads" element={<Downloads downloads={downloads} />} />
+            <Route path="/storage" element={<Storage job={storageJob} />} />
           </Routes>
         </main>
       </div>

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Film, Tv, Download, Settings, Heart } from 'lucide-react';
+import { Film, Tv, Download, Settings, Heart, HardDrive } from 'lucide-react';
 import { useState } from 'react';
 import SettingsModal from './SettingsModal.jsx';
 
@@ -44,6 +44,10 @@ export default function Navbar({ activeDownloads, watchlistCount, settings, onSe
                   {activeDownloads > 9 ? '9+' : activeDownloads}
                 </span>
               )}
+            </NavLink>
+            <NavLink to="/storage" className={linkClass}>
+              <HardDrive size={16} />
+              <span className="hidden sm:inline">Storage</span>
             </NavLink>
           </div>
 

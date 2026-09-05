@@ -75,6 +75,15 @@ function migrate(db) {
       updated_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
+    CREATE TABLE IF NOT EXISTS media_sizes (
+      kind TEXT NOT NULL CHECK(kind IN ('movie', 'episode')),
+      item_id INTEGER NOT NULL,
+      parent_id INTEGER,
+      size INTEGER NOT NULL DEFAULT 0,
+      checked_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      PRIMARY KEY (kind, item_id)
+    );
+
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
